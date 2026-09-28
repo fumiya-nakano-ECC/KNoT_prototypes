@@ -1,0 +1,174 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Kinetic Bar | Flight Motion Study</title>
+<style>
+:root{color-scheme:dark;--bg:#141718;--line:#3a4042;--text:#edf1ec;--muted:#a6afaa;--top:#b1f4ce;--bottom:#85c9ee;--accent:#efce8a}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--text);font:14px/1.6 system-ui,sans-serif;letter-spacing:0}main{max-width:1380px;margin:auto;padding:28px}header{display:flex;align-items:center;justify-content:space-between;gap:16px;margin-bottom:20px}h1{font-size:24px;line-height:1.3;margin:0}header p{margin:6px 0;color:var(--muted)}.layout{display:grid;grid-template-columns:minmax(0,1fr) 300px;gap:28px}.stage{min-width:0}.stage-head,.row{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap}.stage-head{min-height:38px}#phase{color:var(--accent)}canvas{display:block;width:100%;height:470px;background:#101313}.legend{display:flex;gap:20px;color:var(--muted);font-size:12px;padding:10px 0}.swatch{display:inline-block;width:18px;height:3px;vertical-align:middle;margin-right:6px}.transport{padding:16px 0;border-top:1px solid var(--line)}button,select{font:inherit;color:var(--text);background:#242a2b;border:1px solid var(--line);border-radius:5px;cursor:pointer;padding:8px 10px}button:hover{border-color:var(--top)}button[aria-pressed=true]{background:var(--top);border-color:var(--top);color:#13241a}button:focus-visible,input:focus-visible,select:focus-visible{outline:2px solid var(--accent);outline-offset:3px}.icon{width:40px;height:40px;font-size:18px;padding:0}.buttons{display:flex;gap:8px;align-items:center}input[type=range]{width:100%;accent-color:var(--top);margin:10px 0}input[type=checkbox]{accent-color:var(--top)}.clock,output{font-variant-numeric:tabular-nums;color:var(--top)}.clock{white-space:nowrap}.timeline-label{display:flex;justify-content:space-between;color:var(--muted);font-size:12px}aside{border-left:1px solid var(--line);padding-left:24px}h2{font-size:14px;margin:0 0 12px}.modes{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:5px}.modes button:first-child{grid-column:1/-1}.control{margin:20px 0}.control label{display:flex;justify-content:space-between;gap:8px}output{white-space:nowrap}select{width:100%;margin-top:8px}.definition{border-top:1px solid var(--line);margin-top:22px;padding-top:18px}.definition p{margin:8px 0;color:var(--muted);font-size:13px}.definition strong{color:var(--text);font-weight:500}footer{margin-top:16px;color:var(--muted);font-size:12px}@media(max-width:850px){main{padding:18px}.layout{grid-template-columns:1fr}aside{border-left:0;border-top:1px solid var(--line);padding:20px 0 0}canvas{height:400px}header{align-items:flex-start;flex-direction:column}}@media(max-width:480px){main{padding:14px}h1{font-size:22px}canvas{height:320px}.stage-head{font-size:12px}.clock{font-size:12px}}
+</style>
+</head>
+<body>
+<main>
+<header><div><h1>Kinetic Bar / Flight Motion</h1><p>離陸・飛行・着陸</p></div><span>18 + 18 / SQUARE</span></header>
+<div class="layout">
+<section class="stage" aria-label="モーションプレビュー">
+<div class="stage-head"><span id="sceneTitle"></span><span id="phase"></span></div>
+<canvas id="stage" role="img" aria-label="正方形の内周と外周をつなぐ上下各18本のバーのモーション"></canvas>
+<div class="legend"><span><i class="swatch" style="background:var(--top)"></i>上層 18本</span><span><i class="swatch" style="background:var(--bottom)"></i>下層 18本</span></div>
+<div class="transport"><div class="row"><div class="buttons"><button class="icon" id="play" title="再生 / 一時停止" aria-label="再生">▶</button><button class="icon" id="reset" title="先頭へ" aria-label="先頭へ">↶</button><label><input id="loop" type="checkbox" checked> ループ</label></div><span id="clock" class="clock"></span></div>
+<input id="timeline" type="range" min="0" step="0.001" value="0" aria-label="再生位置">
+<div class="timeline-label"><span>0 s</span><span id="duration"></span></div></div>
+</section>
+<aside aria-label="モーション設定"><h2>シーケンス</h2><div class="modes" id="modes"></div><div id="controls"></div>
+<div class="control"><label for="direction">周方向</label><select id="direction"><option value="1">時計回り</option><option value="-1">反時計回り</option></select></div>
+<div class="definition"><h2>モーション定義</h2><p><strong>離陸</strong><br>静止 → 内側へためる → 素早く蹴り出す → 展開して安定</p><p><strong>飛行</strong><br>展開姿勢を保ち、上下の反転運動と周方向の波を反復</p><p><strong>着陸</strong><br>羽ばたきを弱める → 閉じる → 接地の反動 → 静止</p></div>
+</aside></div>
+<footer>平面模式図。周方向の移動と内外端点のずれで動作を表現。固定長の剛体運動・実機の衝突判定は対象外。</footer>
+</main>
+<script>
+'use strict';
+// Motion coordinates: pose = signed contour shear, travel = perimeter displacement.
+// Both depth layers retain their 18 fixed IDs and cyclic minimum spacing.
+const BAR_COUNT=18, MIN_GAP=.2/BAR_COUNT, TAU=2*Math.PI;
+const clamp=(v,a=0,b=1)=>Math.max(a,Math.min(b,v));
+const ease=v=>{const u=clamp(v);return u*u*u*(10+u*(-15+6*u));};
+const mix=(a,b,t)=>a+(b-a)*ease(t);
+const MODES={sequence:'連続',takeoff:'離陸',flight:'飛行',landing:'着陸'};
+const PARAMS=[
+  {key:'strength',label:'展開量',min:0,max:1,step:.01,value:.75,unit:'%',scale:100},
+  {key:'travel',label:'周方向の移動量',min:0,max:1,step:.01,value:.55,unit:'%',scale:100},
+  {key:'flap',label:'羽ばたき量',min:0,max:1,step:.01,value:.6,unit:'%',scale:100},
+  {key:'ripple',label:'伝播の強さ',min:0,max:1,step:.01,value:.65,unit:'%',scale:100},
+  {key:'impact',label:'接地の反動',min:0,max:1,step:.01,value:.5,unit:'%',scale:100},
+  {key:'tempo',label:'再生速度',min:.5,max:2,step:.05,value:1,unit:'×',scale:1}
+];
+const Motion={
+  lengths:{takeoff:5,flight:8,landing:6,sequence:19},
+  duration(mode,p){return this.lengths[mode]/p.tempo;},
+  segment(mode,t){
+    if(mode!=='sequence')return {mode,t:clamp(t,0,this.lengths[mode])};
+    if(t<5)return {mode:'takeoff',t};
+    if(t<13)return {mode:'flight',t:t-5};
+    return {mode:'landing',t:clamp(t-13,0,6)};
+  },
+  phase(mode,t){
+    if(mode==='takeoff')return t<.65?'静止':t<1.55?'ため':t<2.55?'蹴り出し':t<4.2?'展開':'飛行姿勢へ';
+    if(mode==='flight')return '巡航 / 周期 2.0 s';
+    return t<1.3?'減速':t<3.6?'降下・閉じる':t<4.25?'接地':t<5.6?'反動の収束':'静止';
+  },
+  // Launch ends at the exact cruise pose. Landing starts at the same pose.
+  envelope(mode,t){
+    if(mode==='flight')return {pose:1,flap:1,travel:1,impact:0};
+    if(mode==='takeoff'){
+      let pose;
+      if(t<.65)pose=0;
+      else if(t<1.55)pose=mix(0,-.3,(t-.65)/.9);
+      else if(t<2.55)pose=mix(-.3,1.18,(t-1.55));
+      else if(t<4.2)pose=mix(1.18,1,(t-2.55)/1.65);
+      else pose=1;
+      return {pose,flap:ease((t-2.55)/2.45),travel:ease((t-1.55)/3.45),impact:0};
+    }
+    const contact=ease((t-3.6)/.65)*(1-ease((t-4.25)/1.35));
+    return {pose:1-ease((t-1.3)/2.3),flap:1-ease(t/2.7),travel:1-ease(t/3.6),impact:-.22*contact*Math.cos((t-4.25)*TAU/1.35)};
+  },
+  orderedPositions(offsets,common=0){
+    let scale=1;
+    for(let i=0;i<BAR_COUNT;i++){
+      const delta=offsets[(i+1)%BAR_COUNT]-offsets[i];
+      if(delta<0)scale=Math.min(scale,(1/BAR_COUNT-MIN_GAP)/-delta);
+    }
+    return offsets.map((v,i)=>i/BAR_COUNT+common+v*scale);
+  },
+  frame(mode,p,time){
+    const segment=this.segment(mode,time*p.tempo);
+    const t=segment.t, kind=segment.mode;
+    const env=this.envelope(kind,t);
+    // Eight seconds of cruise is exactly four cycles. Takeoff's clock meets it at 0.
+    const clock=(kind==='takeoff'?t-5:t)*Math.PI;
+    return [0,1].map(row=>{
+      const sign=(row===0?1:-1)*p.direction;
+      const offsets=[],shear=[];
+      for(let i=0;i<BAR_COUNT;i++){
+        const spatial=TAU*i/BAR_COUNT*p.direction;
+        const wave=(1-p.ripple)*Math.sin(clock)+p.ripple*Math.sin(clock-spatial);
+        const localPose=env.pose+env.flap*p.flap*.24*wave+env.impact*p.impact*2;
+        shear.push(sign*p.strength*.095*localPose);
+        offsets.push(sign*p.travel*.018*env.travel*wave);
+      }
+      const common=sign*p.travel*.045*(env.pose+env.impact*p.impact*2);
+      const outer=this.orderedPositions(offsets,common);
+      const inner=this.orderedPositions(outer.map((v,i)=>v-i/BAR_COUNT-common+shear[i]),common);
+      return outer.map((v,i)=>({id:i,outer:v,inner:inner[i]}));
+    });
+  }
+};
+const $=id=>document.getElementById(id);
+const state={mode:'sequence',p:Object.fromEntries(PARAMS.map(s=>[s.key,s.value])),time:0,playing:false,loop:true};
+state.p.direction=1;
+function square(position,half,cx,cy){
+  const u=((position%1)+1)%1*4,edge=Math.floor(u),f=u-edge;
+  const points=[[-1+2*f,-1],[1,-1+2*f],[1-2*f,1],[-1,1-2*f]];
+  return [cx+points[edge][0]*half,cy+points[edge][1]*half];
+}
+function draw(){
+  const canvas=$('stage'),ctx=canvas.getContext('2d');
+  const {width:w,height:h}=canvas.getBoundingClientRect(),dpr=window.devicePixelRatio||1;
+  if(canvas.width!==Math.round(w*dpr)||canvas.height!==Math.round(h*dpr)){canvas.width=Math.round(w*dpr);canvas.height=Math.round(h*dpr);}
+  ctx.setTransform(dpr,0,0,dpr,0,0);ctx.clearRect(0,0,w,h);
+  const size=Math.min(w-48,h-48),outer=size/2,inner=size*.245,cx=w/2,cy=h/2;
+  ctx.strokeStyle='#59625f';ctx.lineWidth=10;ctx.strokeRect(cx-outer-6,cy-outer-6,size+12,size+12);
+  const frame=Motion.frame(state.mode,state.p,state.time);
+  for(const row of [1,0])for(const bar of frame[row]){
+    const a=square(bar.outer,outer,cx,cy),b=square(bar.inner,inner,cx,cy);
+    ctx.strokeStyle=row===0?'#b1f4ce':'#85c9ee';ctx.fillStyle=ctx.strokeStyle;
+    ctx.lineWidth=Math.max(2,size*.009);ctx.lineCap='round';ctx.beginPath();ctx.moveTo(...a);ctx.lineTo(...b);ctx.stroke();
+    ctx.beginPath();ctx.arc(...a,row===0?2:4,0,TAU);ctx.fill();
+  }
+  ctx.fillStyle='#252b29';ctx.fillRect(cx-inner,cy-inner,inner*2,inner*2);
+  ctx.strokeStyle='#66716c';ctx.lineWidth=1;ctx.strokeRect(cx-inner,cy-inner,inner*2,inner*2);
+  const seg=Motion.segment(state.mode,state.time*state.p.tempo);
+  ctx.textAlign='center';ctx.fillStyle='#edf1ec';ctx.font='15px system-ui';ctx.fillText(MODES[seg.mode],cx,cy-4);
+  ctx.fillStyle='#a6afaa';ctx.font='11px system-ui';ctx.fillText('18 + 18',cx,cy+18);
+}
+function render(){
+  const end=Motion.duration(state.mode,state.p),seg=Motion.segment(state.mode,state.time*state.p.tempo);
+  $('sceneTitle').textContent=MODES[state.mode];$('phase').textContent=seg.mode==='flight'?'巡航 / 周期 '+(2/state.p.tempo).toFixed(1)+' s':Motion.phase(seg.mode,seg.t);
+  $('timeline').max=end;$('timeline').value=state.time;$('duration').textContent=end.toFixed(2)+' s';
+  $('clock').textContent=state.time.toFixed(2)+' / '+end.toFixed(2)+' s';
+  $('play').textContent=state.playing?'Ⅱ':'▶';$('play').setAttribute('aria-label',state.playing?'一時停止':'再生');
+  document.querySelectorAll('[data-mode]').forEach(b=>b.setAttribute('aria-pressed',String(b.dataset.mode===state.mode)));
+  draw();
+}
+for(const [key,label] of Object.entries(MODES)){
+  const button=document.createElement('button');button.textContent=label;button.dataset.mode=key;
+  button.onclick=()=>{state.mode=key;state.time=0;render();};$('modes').append(button);
+}
+for(const spec of PARAMS){
+  const control=document.createElement('div');control.className='control';
+  control.innerHTML=`<label for="${spec.key}">${spec.label}<output id="${spec.key}Value"></output></label><input id="${spec.key}" type="range" min="${spec.min}" max="${spec.max}" step="${spec.step}" value="${spec.value}">`;
+  $('controls').append(control);
+  const update=()=>{$(spec.key+'Value').textContent=(state.p[spec.key]*spec.scale).toFixed(spec.key==='tempo'?2:0)+spec.unit;};
+  $(spec.key).oninput=e=>{const oldTempo=state.p.tempo;state.p[spec.key]=Number(e.target.value);if(spec.key==='tempo')state.time*=oldTempo/state.p.tempo;update();render();};update();
+}
+$('direction').onchange=e=>{state.p.direction=Number(e.target.value);render();};
+$('play').onclick=()=>{if(state.time>=Motion.duration(state.mode,state.p))state.time=0;state.playing=!state.playing;render();};
+$('reset').onclick=()=>{state.time=0;state.playing=false;render();};
+$('loop').onchange=e=>{state.loop=e.target.checked;};
+$('timeline').oninput=e=>{state.time=Number(e.target.value);render();};
+let previous=null;
+function animate(now){
+  const dt=previous===null?0:Math.min((now-previous)/1000,.1);previous=now;
+  if(state.playing&&!document.hidden){
+    const end=Motion.duration(state.mode,state.p);state.time+=dt;
+    if(state.time>=end){state.time=state.loop?state.time%end:end;if(!state.loop)state.playing=false;}
+    render();
+  }
+  requestAnimationFrame(animate);
+}
+document.addEventListener('visibilitychange',()=>{previous=null;});
+new ResizeObserver(draw).observe($('stage'));render();requestAnimationFrame(animate);
+</script>
+</body>
+</html>
