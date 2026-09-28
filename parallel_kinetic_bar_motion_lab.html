@@ -1,0 +1,506 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Kinetic Bar Motion Lab</title>
+<style>
+  :root{
+    color-scheme: light dark;
+    --bg:#f4f4f4;
+    --panel:#ffffff;
+    --card:#fafafa;
+    --text:#171717;
+    --muted:#6b6b6b;
+    --border:#d4d4d4;
+    --accent:#2f6fed;
+    --accent-bg:#dfe9ff;
+  }
+  @media (prefers-color-scheme: dark){
+    :root{
+      --bg:#121212;
+      --panel:#1a1a1a;
+      --card:#202020;
+      --text:#f3f3f3;
+      --muted:#aaa;
+      --border:#3b3b3b;
+      --accent:#8fb3ff;
+      --accent-bg:#24345a;
+    }
+  }
+  *{box-sizing:border-box}
+  body{
+    margin:0;
+    font-family:system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;
+    background:var(--bg);
+    color:var(--text);
+  }
+  main{max-width:980px;margin:0 auto;padding:24px}
+  h1{font-size:24px;margin:0 0 4px}
+  .sub{color:var(--muted);font-size:14px;margin-bottom:18px}
+  .panel{
+    background:var(--panel);
+    border:1px solid var(--border);
+    border-radius:14px;
+    padding:16px;
+    margin-bottom:14px;
+  }
+  .row{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
+  .space{justify-content:space-between}
+  .presets{display:flex;gap:8px;flex-wrap:wrap}
+  button,select,input{font:inherit}
+  button{
+    border:1px solid var(--border);
+    background:transparent;
+    color:var(--text);
+    border-radius:9px;
+    padding:9px 13px;
+    cursor:pointer;
+  }
+  button.active{
+    border-color:var(--accent);
+    background:var(--accent-bg);
+  }
+  button.primary{
+    background:var(--accent-bg);
+    border-color:var(--accent);
+  }
+  .stage-wrap{
+    margin-top:14px;
+    border:1px solid var(--border);
+    border-radius:12px;
+    overflow:hidden;
+    background:var(--card);
+  }
+  svg{display:block;width:100%;height:auto}
+  .timeline{width:100%}
+  .grid{
+    display:grid;
+    grid-template-columns:1fr 1fr;
+    gap:14px;
+  }
+  @media(max-width:760px){.grid{grid-template-columns:1fr}}
+  .group{
+    background:var(--card);
+    border:1px solid var(--border);
+    border-radius:12px;
+    padding:14px;
+  }
+  .group h2{font-size:16px;margin:0 0 12px}
+  label{display:block;font-size:14px;margin:12px 0}
+  .out{float:right;color:var(--muted);font-variant-numeric:tabular-nums}
+  input[type=range]{width:100%;margin-top:6px}
+  select{
+    width:100%;
+    margin-top:6px;
+    padding:9px;
+    border-radius:8px;
+    border:1px solid var(--border);
+    background:var(--panel);
+    color:var(--text);
+  }
+  .small{font-size:13px;color:var(--muted)}
+  .readout{
+    margin-top:8px;
+    font-family:ui-monospace,SFMono-Regular,Menlo,monospace;
+    font-size:12px;
+    color:var(--muted);
+    overflow-wrap:anywhere;
+  }
+</style>
+</head>
+<body>
+<main id="app">
+  <h1>Kinetic Bar Motion Lab</h1>
+  <div class="sub">上下18本 × 2。バー番号と時間から回転角を生成する軽量モーション・プロトタイパ。</div>
+
+  <section class="panel">
+    <div class="row space">
+      <div>
+        <strong>Motion Preview</strong>
+        <div class="small">離陸・飛行・着陸の印象を、位相・振幅・伝播で探索</div>
+      </div>
+      <div class="presets">
+        <button data-preset="takeoff">離陸</button>
+        <button data-preset="flight">飛行</button>
+        <button data-preset="landing">着陸</button>
+      </div>
+    </div>
+
+    <div class="stage-wrap">
+      <svg viewBox="0 0 900 420" role="img" aria-label="上下各18本のバーのモーションプレビュー">
+        <rect x="115" y="160" width="670" height="100" rx="16"
+              fill="var(--panel)" stroke="var(--border)" stroke-width="2"/>
+        <text x="450" y="205" text-anchor="middle" font-size="14" fill="var(--muted)">KINETIC FIELD</text>
+        <text id="modeLabel" x="450" y="228" text-anchor="middle" font-size="22" font-weight="600" fill="var(--text)">TAKEOFF</text>
+        <line x1="90" y1="90" x2="810" y2="90" stroke="var(--border)" stroke-width="3"/>
+        <line x1="90" y1="330" x2="810" y2="330" stroke="var(--border)" stroke-width="3"/>
+        <g id="barsTop"></g>
+        <g id="barsBottom"></g>
+      </svg>
+    </div>
+
+    <div class="row" style="margin-top:12px">
+      <button id="play" class="primary">一時停止</button>
+      <button id="restart">先頭へ</button>
+      <button id="variation">別案を作る</button>
+      <span style="margin-left:auto" class="small"><span id="timeText">0.00</span> s</span>
+    </div>
+
+    <label>タイムライン
+      <input id="timeline" class="timeline" type="range" min="0" max="1000" value="0">
+    </label>
+  </section>
+
+  <section class="grid">
+    <div class="group">
+      <h2>基本モーション</h2>
+
+      <label>最大角度 <span id="angleOut" class="out"></span>
+        <input id="angle" type="range" min="5" max="85" value="58" step="1">
+      </label>
+
+      <label>周期 / シーケンス長 <span id="periodOut" class="out"></span>
+        <input id="period" type="range" min="1.5" max="12" value="5.5" step="0.1">
+      </label>
+
+      <label>隣接バーの時間差 <span id="delayOut" class="out"></span>
+        <input id="delay" type="range" min="0" max="0.35" value="0.11" step="0.005">
+      </label>
+
+      <label>空間波数 <span id="wavesOut" class="out"></span>
+        <input id="waves" type="range" min="0.25" max="4" value="1" step="0.05">
+      </label>
+    </div>
+
+    <div class="group">
+      <h2>質感</h2>
+
+      <label>オーバーシュート / バウンス <span id="bounceOut" class="out"></span>
+        <input id="bounce" type="range" min="0" max="1" value="0.32" step="0.01">
+      </label>
+
+      <label>揺らぎ <span id="noiseOut" class="out"></span>
+        <input id="noise" type="range" min="0" max="15" value="1.2" step="0.1">
+      </label>
+
+      <label>上下の関係
+        <select id="relation">
+          <option value="mirror">鏡像</option>
+          <option value="same">同位相</option>
+          <option value="counter">逆位相</option>
+        </select>
+      </label>
+
+      <label>伝播方向
+        <select id="direction">
+          <option value="left">左 → 右</option>
+          <option value="right">右 → 左</option>
+          <option value="center">中央 → 外</option>
+          <option value="edges">外 → 中央</option>
+        </select>
+      </label>
+    </div>
+  </section>
+
+  <section class="panel">
+    <div class="small">
+      <strong>離陸</strong>：加速 → ピッチアップ → 小さなオーバーシュート　
+      <strong>飛行</strong>：低振幅の進行波＋微揺動　
+      <strong>着陸</strong>：順次展開 → 接地感のある減衰
+    </div>
+    <div id="readout" class="readout"></div>
+  </section>
+</main>
+
+<script>
+(() => {
+  const root = document.getElementById('app');
+  const $ = id => document.getElementById(id);
+  const NS = 'http://www.w3.org/2000/svg';
+  const N = 18;
+  const top = $('barsTop');
+  const bottom = $('barsBottom');
+
+  const state = {
+    mode: 'takeoff',
+    playing: true,
+    start: performance.now(),
+    pausedT: 0
+  };
+
+  const presets = {
+    takeoff: {
+      angle:58, period:5.5, delay:.11, waves:1,
+      bounce:.32, noise:1.2, relation:'mirror', direction:'center'
+    },
+    flight: {
+      angle:19, period:3.4, delay:.08, waves:1.35,
+      bounce:.05, noise:2.1, relation:'counter', direction:'left'
+    },
+    landing: {
+      angle:68, period:6.5, delay:.14, waves:.65,
+      bounce:.22, noise:.7, relation:'mirror', direction:'edges'
+    }
+  };
+
+  const labels = {
+    takeoff:'TAKEOFF',
+    flight:'FLIGHT',
+    landing:'LANDING'
+  };
+
+  function makeBars(group, y, isTop){
+    for(let i=0;i<N;i++){
+      const x = 110 + i * (680/(N-1));
+      const g = document.createElementNS(NS,'g');
+      g.dataset.i = i;
+      g.setAttribute('transform', `translate(${x} ${y})`);
+
+      const line = document.createElementNS(NS,'line');
+      line.setAttribute('x1','0');
+      line.setAttribute('y1','0');
+      line.setAttribute('x2','0');
+      line.setAttribute('y2', isTop ? '112' : '-112');
+      line.setAttribute('stroke','var(--text)');
+      line.setAttribute('stroke-width','8');
+      line.setAttribute('stroke-linecap','round');
+      g.appendChild(line);
+
+      const pivot = document.createElementNS(NS,'circle');
+      pivot.setAttribute('cx','0');
+      pivot.setAttribute('cy','0');
+      pivot.setAttribute('r','5');
+      pivot.setAttribute('fill','var(--muted)');
+      g.appendChild(pivot);
+
+      group.appendChild(g);
+    }
+  }
+
+  makeBars(top, 90, true);
+  makeBars(bottom, 330, false);
+
+  function val(id){
+    const el = $(id);
+    return el.tagName === 'SELECT' ? el.value : Number(el.value);
+  }
+
+  const clamp = (x,a,b) => Math.max(a, Math.min(b,x));
+  const smooth = x => {
+    x = clamp(x,0,1);
+    return x*x*(3-2*x);
+  };
+  const easeOut = x => 1 - Math.pow(1-clamp(x,0,1),3);
+
+  function spatialPosition(i){
+    let u = i/(N-1);
+    const d = val('direction');
+
+    if(d === 'right') u = 1-u;
+    if(d === 'center') u = Math.abs(u-.5)*2;
+    if(d === 'edges') u = 1-Math.abs(u-.5)*2;
+
+    return u;
+  }
+
+  function deterministicNoise(i,t){
+    return Math.sin(i*12.9898+t*2.37)*.62 +
+           Math.sin(i*3.17-t*4.11)*.38;
+  }
+
+  function deflection(i,t){
+    const A = val('angle');
+    const P = Math.max(.2,val('period'));
+    const D = val('delay');
+    const W = val('waves');
+    const B = val('bounce');
+    const u = spatialPosition(i);
+    const local = t-u*D*(N-1);
+
+    if(state.mode === 'takeoff'){
+      const p = clamp(local/P,0,1);
+      const rise = smooth(clamp(p*1.55,0,1));
+      const overshoot =
+        Math.sin(clamp(p*1.55,0,1)*Math.PI*2.15) *
+        Math.exp(-p*4.2) * A*.24*B;
+      const sweep =
+        Math.sin((u*W-.12)*Math.PI) * A*.08*(1-p);
+
+      return A*rise + overshoot + sweep;
+    }
+
+    if(state.mode === 'flight'){
+      const phase = (local/P)*Math.PI*2 + u*Math.PI*2*W;
+      return Math.sin(phase)*A +
+             Math.sin(phase*2.13+i*.17)*A*.16;
+    }
+
+    const p = clamp(local/P,0,1);
+    const deploy = easeOut(clamp(p*1.35,0,1));
+    const settle =
+      Math.sin(p*Math.PI*4.2) *
+      Math.exp(-p*5.2) * A*.22*B;
+
+    return A*deploy + settle;
+  }
+
+  function render(t){
+    const noise = val('noise');
+    const relation = val('relation');
+
+    [...top.children].forEach((g,i)=>{
+      const d = deflection(i,t) +
+                deterministicNoise(i,t)*noise;
+
+      g.setAttribute(
+        'transform',
+        `translate(${110+i*(680/(N-1))} 90) rotate(${-d})`
+      );
+    });
+
+    [...bottom.children].forEach((g,i)=>{
+      let d = deflection(i,t) +
+              deterministicNoise(i,t+.7)*noise;
+
+      if(relation === 'counter') d = -d;
+
+      const rot = relation === 'same' ? -d : d;
+
+      g.setAttribute(
+        'transform',
+        `translate(${110+i*(680/(N-1))} 330) rotate(${rot})`
+      );
+    });
+
+    $('timeText').textContent = t.toFixed(2);
+
+    const P = val('period');
+    $('timeline').value = Math.round(((t%P)/P)*1000);
+
+    $('readout').textContent =
+      `${labels[state.mode]} | amplitude ${val('angle')}° | ` +
+      `duration ${val('period').toFixed(1)}s | ` +
+      `delay ${val('delay').toFixed(3)}s/bar | ` +
+      `spatial ${val('waves').toFixed(2)} cycles | ` +
+      `${val('relation')} | ${val('direction')}`;
+  }
+
+  function updateOutputs(){
+    $('angleOut').textContent = val('angle')+'°';
+    $('periodOut').textContent = val('period').toFixed(1)+' s';
+    $('delayOut').textContent = val('delay').toFixed(3)+' s';
+    $('wavesOut').textContent = val('waves').toFixed(2);
+    $('bounceOut').textContent = val('bounce').toFixed(2);
+    $('noiseOut').textContent = val('noise').toFixed(1)+'°';
+  }
+
+  function applyPreset(name){
+    state.mode = name;
+    const p = presets[name];
+
+    Object.entries(p).forEach(([k,v]) => {
+      $(k).value = v;
+    });
+
+    $('modeLabel').textContent = labels[name];
+
+    document.querySelectorAll('[data-preset]').forEach(btn => {
+      btn.classList.toggle('active', btn.dataset.preset === name);
+    });
+
+    state.start = performance.now();
+    state.pausedT = 0;
+    updateOutputs();
+    render(0);
+  }
+
+  document.querySelectorAll('[data-preset]').forEach(btn => {
+    btn.addEventListener('click', () => applyPreset(btn.dataset.preset));
+  });
+
+  [
+    'angle','period','delay','waves',
+    'bounce','noise','relation','direction'
+  ].forEach(id => {
+    $(id).addEventListener('input', () => {
+      updateOutputs();
+      if(!state.playing) render(state.pausedT);
+    });
+  });
+
+  $('play').addEventListener('click', () => {
+    state.playing = !state.playing;
+
+    if(state.playing){
+      state.start = performance.now() - state.pausedT*1000;
+      $('play').textContent = '一時停止';
+    }else{
+      $('play').textContent = '再生';
+    }
+  });
+
+  $('restart').addEventListener('click', () => {
+    state.pausedT = 0;
+    state.start = performance.now();
+    render(0);
+  });
+
+  $('timeline').addEventListener('input', e => {
+    state.playing = false;
+    $('play').textContent = '再生';
+    state.pausedT =
+      (Number(e.target.value)/1000) * val('period');
+    render(state.pausedT);
+  });
+
+  $('variation').addEventListener('click', () => {
+    const base = presets[state.mode];
+
+    $('angle').value =
+      clamp(base.angle+(Math.random()-.5)*24,5,85);
+
+    $('delay').value =
+      clamp(base.delay+(Math.random()-.5)*.11,0,.35);
+
+    $('waves').value =
+      clamp(base.waves+(Math.random()-.5)*1.2,.25,4);
+
+    $('bounce').value =
+      clamp(base.bounce+(Math.random()-.5)*.35,0,1);
+
+    $('noise').value =
+      clamp(base.noise+(Math.random()-.5)*3,0,15);
+
+    const dirs = ['left','right','center','edges'];
+    $('direction').value =
+      dirs[Math.floor(Math.random()*dirs.length)];
+
+    updateOutputs();
+    state.start = performance.now();
+    state.pausedT = 0;
+  });
+
+  function tick(now){
+    let t = state.pausedT;
+
+    if(state.playing){
+      t = (now-state.start)/1000;
+      state.pausedT = t;
+      render(t);
+    }
+
+    requestAnimationFrame(tick);
+  }
+
+  if(matchMedia('(prefers-reduced-motion: reduce)').matches){
+    state.playing = false;
+    $('play').textContent = '再生';
+  }
+
+  applyPreset('takeoff');
+  requestAnimationFrame(tick);
+})();
+</script>
+</body>
+</html>
