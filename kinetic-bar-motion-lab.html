@@ -1,0 +1,308 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Kinetic Bar Motion Lab</title>
+<style>
+  :root { color-scheme: dark; --bg:#101519; --panel:#192126; --line:#334149; --text:#e9f0ee; --muted:#9caeaf; --mint:#b1f4ce; --blue:#85c9ee; }
+  * { box-sizing:border-box; }
+  body { margin:0; background:var(--bg); color:var(--text); font:14px/1.6 system-ui,sans-serif; }
+  main { max-width:1480px; margin:auto; padding:32px; }
+  header { display:flex; justify-content:space-between; gap:20px; align-items:center; margin-bottom:26px; }
+  h1 { font-size:27px; letter-spacing:-.7px; margin:0; }
+  p { margin:5px 0; color:var(--muted); }
+  .tag { color:var(--mint); border:1px solid var(--line); padding:6px 12px; border-radius:30px; white-space:nowrap; }
+  .layout { display:grid; grid-template-columns:minmax(0,1fr) 320px; gap:20px; }
+  .panel { background:var(--panel); border:1px solid var(--line); border-radius:16px; overflow:hidden; }
+  .stage-head { display:flex; justify-content:space-between; padding:18px 22px; gap:12px; }
+  .eyebrow { text-transform:uppercase; font-size:11px; letter-spacing:2px; color:var(--muted); }
+  canvas { display:block; width:100%; height:440px; }
+  .legend { padding:0 22px 18px; color:var(--muted); font-size:12px; }
+  .transport { padding:20px 22px; border-top:1px solid var(--line); }
+  .row { display:flex; align-items:center; gap:10px; flex-wrap:wrap; }
+  button,select { font:inherit; border:1px solid var(--line); border-radius:8px; padding:9px 12px; color:var(--text); background:#222e34; cursor:pointer; }
+  button:hover { border-color:var(--mint); }
+  button[aria-pressed="true"],button.primary { background:var(--mint); color:#14281e; border-color:var(--mint); }
+  button:focus-visible,select:focus-visible,input:focus-visible { outline:2px solid var(--blue); outline-offset:4px; }
+  input[type=range] { width:100%; accent-color:var(--mint); cursor:pointer; margin:10px 0; }
+  .clock { margin-left:auto; font-variant-numeric:tabular-nums; color:var(--mint); }
+  .timeline-label { display:flex; justify-content:space-between; font-size:12px; color:var(--muted); }
+  aside { padding:22px; }
+  h2 { font-size:14px; margin:0 0 12px; }
+  .presets { display:grid; grid-template-columns:repeat(3,1fr); gap:6px; }
+  .presets button { padding:9px 3px; }
+  #description { font-size:12px; min-height:40px; margin:12px 0 20px; }
+  .control { margin-bottom:15px; }
+  .control label { display:flex; justify-content:space-between; gap:8px; }
+  output { color:var(--mint); font-variant-numeric:tabular-nums; }
+  select { width:100%; margin-top:6px; }
+  .divider { border-top:1px solid var(--line); margin:20px 0; }
+  #variant { width:100%; }
+  #status { color:var(--muted); font-size:12px; min-height:20px; margin-top:8px; }
+  details { margin-top:20px; padding:16px 20px; color:var(--muted); }
+  summary { cursor:pointer; color:var(--text); }
+  footer { margin-top:18px; font-size:12px; color:var(--muted); }
+  @media(max-width:900px) { main{padding:18px} .layout{grid-template-columns:1fr} canvas{height:360px} aside{padding:20px} }
+  @media(max-width:480px) { header{align-items:flex-start;flex-direction:column} h1{font-size:24px} canvas{height:300px} .stage-head{padding:16px} }
+</style>
+</head>
+<body>
+<main>
+  <header><div><div class="eyebrow">Motion studies / 01</div><h1>Kinetic Bar Motion Lab</h1><p>離陸から巡航、そして着陸へ。36本の動きを探る。</p></div><span class="tag">18 TOP + 18 BOTTOM</span></header>
+  <div class="layout">
+    <section class="panel" aria-label="モーションプレビュー">
+      <div class="stage-head"><span id="sceneTitle">離陸 / TAKEOFF</span><span class="eyebrow">Square · Top view</span></div>
+      <canvas id="stage" role="img" aria-label="正方形の周囲に配置した上下2レイヤー、各18本のバー。周方向に移動し、同一レイヤーでは順序を維持。"></canvas>
+      <div class="legend"><span style="color:var(--mint)">●</span> 上レイヤー18本　 <span style="color:var(--blue)">●</span> 下レイヤー18本　 · 点は移動位置 ／ 同一レイヤー追い抜き禁止</div>
+      <div class="transport">
+        <div class="row"><button id="play" class="primary" aria-label="再生">▶ 再生</button><button id="reset">先頭へ</button><label><input id="loop" type="checkbox" checked> ループ</label><span id="clock" class="clock"></span></div>
+        <input id="timeline" type="range" min="0" max="1" step="0.001" value="0" aria-label="タイムライン（秒）">
+        <div class="timeline-label"><span>0 s</span><span id="duration"></span></div>
+      </div>
+    </section>
+    <aside class="panel" aria-label="モーション設定">
+      <h2>モーション</h2><div id="presets" class="presets"></div><p id="description"></p>
+      <div id="parameters"></div>
+      <div class="control"><label for="relation">上下関係</label><select id="relation"><option value="mirror">逆方向</option><option value="same">同方向</option><option value="alternate">半周期ずらす</option></select></div>
+      <div class="control"><label for="direction">伝播方向</label><select id="direction"><option value="forward">時計回り</option><option value="reverse">反時計回り</option><option value="outward">対角から起点へ</option><option value="inward">起点から両方向</option></select></div>
+      <div class="divider"></div><button id="variant">↗ 別案を生成</button><div id="status" role="status" aria-live="polite"></div>
+    </aside>
+  </div>
+  <details class="panel"><summary>使い方と表示の前提</summary><p>プリセットを選び、再生またはタイムラインで動きを確認します。停止中も設定変更はすぐ反映されます。「別案を生成」は選択中のモーションを保ち、各パラメータと上下関係・伝播方向を変更します。</p><p>上下は奥行きの異なる2レイヤーです。各レイヤー18本を正方形の全周に配置し、中央の正方形と外枠の間に表示します。上は緑、下は青。異なるレイヤー同士は交差できます。</p><p>「移動量」で周方向の移動と間隔の変化を調整できます。同一レイヤーは固定ID順を保ち、周回の継ぎ目を含めて最小間隔を確保します。内周・外周とも順序を維持し、要求された傾きが制約を超える場合は変形量を抑えます。</p><p>画像をもとにした平面模式図です。最大角度は傾きの入力目安で、正方形の角と順序制約により実際の表示角度は異なります。固定長の剛体・実寸の衝突検証は未実装です。離陸・着陸は終端まで再生し、ループすると先頭姿勢へ戻ります。</p></details>
+  <footer>単一HTML · オフライン対応 · 外部ライブラリなし</footer>
+</main>
+<script>
+'use strict';
+/*
+ * Kinetic Bar Motion Lab — standalone / vanilla JS
+ * 1. CONFIG: fixed geometry, parameter schema and presets.
+ * 2. Motion: pure functions, seconds in / degrees out. No DOM or state mutation.
+ * 3. Store: UI and playback state, updated only through actions.
+ * 4. Renderer: draws an angle frame; knows nothing about motion presets.
+ * 5. UI + Player: input binding and requestAnimationFrame clock.
+ * Extend: add a preset to PRESETS and its normalized profile to Motion.profile.
+ * Original chat source was unavailable; this implementation reconstructs the requested features.
+ */
+
+// 1. Configuration -----------------------------------------------------------
+const BAR_COUNT = 18; // Per depth layer. Intentionally not editable in the UI.
+const MIN_GAP = .2 / BAR_COUNT; // Normalized square perimeter.
+const TAU = Math.PI * 2;
+const PARAMS = [
+  {key:'amplitude', label:'最大角度', min:0, max:90, step:1, unit:'°', digits:0},
+  {key:'travel', label:'移動量', min:0, max:1, step:.01, unit:'%', scale:100, digits:0},
+  {key:'period', label:'周期', min:1, max:12, step:.1, unit:' s', digits:1},
+  {key:'delay', label:'隣接バー時間差', min:0, max:.3, step:.005, unit:' s', digits:3},
+  {key:'waves', label:'空間波数', min:0, max:4, step:.1, unit:'', digits:1},
+  {key:'bounce', label:'バウンス', min:0, max:1, step:.01, unit:'%', scale:100, digits:0},
+  {key:'jitter', label:'揺らぎ', min:0, max:1, step:.01, unit:'%', scale:100, digits:0}
+];
+const PRESETS = {
+  takeoff: {label:'離陸', title:'離陸 / TAKEOFF', description:'静止から順に立ち上がり、小さな羽ばたきを経て展開。', params:{travel:.55,amplitude:65,period:4,delay:.065,waves:1.2,bounce:.25,jitter:.08,relation:'mirror',direction:'forward'}},
+  flight: {label:'飛行', title:'飛行 / CRUISE', description:'位相のずれた滑らかな巡航波。上下の関係で表情を変える。', params:{travel:.55,amplitude:42,period:3.6,delay:.04,waves:1.1,bounce:.15,jitter:.12,relation:'alternate',direction:'forward'}},
+  landing: {label:'着陸', title:'着陸 / LANDING', description:'展開した姿勢から、揺れを減衰させて静止へ。', params:{travel:.55,amplitude:65,period:5,delay:.075,waves:.8,bounce:.35,jitter:.06,relation:'mirror',direction:'inward'}}
+};
+const clamp = (x, lo, hi) => Math.max(lo, Math.min(hi, x));
+const smoothstep = x => { const u=clamp(x,0,1); return u*u*(3-2*u); };
+
+// 2. Pure motion engine ------------------------------------------------------
+const Motion = {
+  rank(index, direction) {
+    const center=(BAR_COUNT-1)/2;
+    if(direction==='reverse') return BAR_COUNT-1-index;
+    if(direction==='outward') return Math.abs(index-center)-.5;
+    if(direction==='inward') return center-Math.abs(index-center);
+    return index;
+  },
+  duration(preset, p) {
+    if(preset==='flight') return p.period*4;
+    const maxRank=Math.max(...Array.from({length:BAR_COUNT},(_,i)=>this.rank(i,p.direction)));
+    return p.period + maxRank*p.delay + (p.relation==='alternate' ? p.period/2 : 0);
+  },
+  profile(preset, localTime, spatialPhase, p, seed, index) {
+    const u=localTime/p.period;
+    const phase=TAU*u-spatialPhase;
+    const flutter=Math.sin(phase)+p.bounce*.3*Math.sin(phase*3);
+    const noise=.6*Math.sin(localTime*2.17+index*1.71+seed)+.4*Math.sin(localTime*3.79-index*.91+seed*.37);
+    if(preset==='flight') return clamp((flutter+p.jitter*.22*noise)/(1+p.bounce*.3+p.jitter*.22),-1,1);
+    const progress=smoothstep(u);
+    // Envelope is zero at both endpoints, so stationary poses are exact.
+    const envelope=Math.sin(Math.PI*clamp(u,0,1))**2;
+    const base=preset==='takeoff' ? progress : 1-progress;
+    return clamp(base+envelope*(p.bounce*.32*flutter+p.jitter*.16*noise),-1,1);
+  },
+  angles(preset, p, time, seed) {
+    return [0,1].map(row=>Array.from({length:BAR_COUNT},(_,index)=>{
+      const rank=this.rank(index,p.direction);
+      const rowDelay=row===1 && p.relation==='alternate' ? p.period/2 : 0;
+      const localTime=time-rank*p.delay-rowDelay;
+      const phase=TAU*p.waves*rank/(BAR_COUNT-1);
+      const value=this.profile(preset,localTime,phase,p,seed,index);
+      const sign=row===1 && p.relation!=='same' ? -1 : 1;
+      return sign*p.amplitude*value;
+    }));
+  },
+  // Contract a periodic displacement field, never sort bar IDs.
+  // Every cyclic neighbor gap stays >= MIN_GAP, including 18 -> 1.
+  orderedPositions(offsets, common=0) {
+    const spacing=1/BAR_COUNT;
+    let scale=1;
+    for(let i=0;i<BAR_COUNT;i++) {
+      const delta=offsets[(i+1)%BAR_COUNT]-offsets[i];
+      if(delta<0) scale=Math.min(scale,(spacing-MIN_GAP)/(-delta));
+    }
+    return offsets.map((offset,i)=>i*spacing+common+offset*scale);
+  },
+  frame(preset,p,time,seed) {
+    const angles=this.angles(preset,p,time,seed);
+    const duration=this.duration(preset,p);
+    return angles.map((layer,row)=>{
+      const sign=row===1 && p.relation!=='same' ? -1:1;
+      const rowPhase=row===1 && p.relation==='alternate' ? Math.PI:0;
+      const envelope=preset==='flight' ? 1 : Math.sin(Math.PI*clamp(time/duration,0,1))**2;
+      const clock=TAU*time/p.period+rowPhase;
+      const direction=p.direction==='reverse'?-1:1;
+      const common=sign*direction*p.travel*.16*envelope*Math.sin(clock*.5);
+      const offsets=layer.map((a,i)=>p.travel*.065*envelope*Math.sin(clock-TAU*this.rank(i,p.direction)/BAR_COUNT));
+      const outer=this.orderedPositions(offsets,common);
+      const innerOffsets=outer.map((position,i)=>position-i/BAR_COUNT-common+layer[i]/90*.125);
+      const inner=this.orderedPositions(innerOffsets,common);
+      return layer.map((angle,i)=>({id:i,angle,outer:outer[i],inner:inner[i]}));
+    });
+  }
+};
+
+// 3. Central state and actions ----------------------------------------------
+const Store = {
+  state:{preset:'takeoff', params:{...PRESETS.takeoff.params}, time:0, playing:false, loop:true, seed:17, variant:0},
+  listeners:new Set(),
+  subscribe(fn) { this.listeners.add(fn); },
+  dispatch(action) {
+    const s=this.state;
+    switch(action.type) {
+      case 'preset': s.preset=action.value; s.params={...PRESETS[action.value].params}; s.time=0; s.variant=0; break;
+      case 'param': s.params={...s.params,[action.key]:action.value}; break;
+      case 'seek': s.time=action.value; break;
+      case 'reset': s.time=0; break;
+      case 'play':
+        if(!s.playing && s.time>=Motion.duration(s.preset,s.params)) s.time=0;
+        s.playing=!s.playing; break;
+      case 'loop': s.loop=action.value; break;
+      case 'variant': {
+        const base=PRESETS[s.preset].params;
+        for(const spec of PARAMS) {
+          const spread=(spec.max-spec.min)*.18;
+          const v=clamp(base[spec.key]+(Math.random()*2-1)*spread,spec.min,spec.max);
+          s.params[spec.key]=Number((Math.round(v/spec.step)*spec.step).toFixed(3));
+        }
+        s.params.relation=['mirror','same','alternate'][Math.floor(Math.random()*3)];
+        s.params.direction=['forward','reverse','outward','inward'][Math.floor(Math.random()*4)];
+        s.seed=Math.floor(Math.random()*10000); s.time=0; s.variant++; break;
+      }
+      case 'tick': {
+        if(!s.playing) return;
+        const end=Motion.duration(s.preset,s.params);
+        s.time+=action.dt;
+        if(s.time>=end) { s.time=s.loop ? s.time%end : end; if(!s.loop) s.playing=false; }
+        break;
+      }
+    }
+    s.time=clamp(s.time,0,Motion.duration(s.preset,s.params));
+    this.listeners.forEach(fn=>fn(s,action));
+  }
+};
+
+// 4. Canvas renderer ---------------------------------------------------------
+class Renderer {
+  constructor(canvas) { this.canvas=canvas; this.ctx=canvas.getContext('2d'); }
+  draw(frame) {
+    const {canvas,ctx}=this;
+    const {width:w,height:h}=canvas.getBoundingClientRect();
+    const dpr=window.devicePixelRatio||1;
+    if(canvas.width!==Math.round(w*dpr)||canvas.height!==Math.round(h*dpr)) {
+      canvas.width=Math.round(w*dpr); canvas.height=Math.round(h*dpr);
+    }
+    ctx.setTransform(dpr,0,0,dpr,0,0); ctx.clearRect(0,0,w,h);
+    const size=Math.min(w-64,h-54), outerHalf=size/2, innerHalf=size*.245;
+    const cx=w/2,cy=h/2;
+    // Same orientation on both square contours gives a cyclic, ordered strip.
+    function square(position,half) {
+      const u=((position%1)+1)%1*4, edge=Math.floor(u), f=u-edge;
+      const points=[[-1+2*f,-1],[1,-1+2*f],[1-2*f,1],[-1,1-2*f]];
+      return [cx+points[edge][0]*half,cy+points[edge][1]*half];
+    }
+    ctx.fillStyle='#0d1317';ctx.fillRect(cx-outerHalf,cy-outerHalf,size,size);
+    ctx.lineWidth=12;ctx.strokeStyle='#54616a';ctx.strokeRect(cx-outerHalf-7,cy-outerHalf-7,size+14,size+14);
+    // Lower layer first; overlap between different depth layers is permitted.
+    for(const row of [1,0]) {
+      for(const bar of frame[row]) {
+        const from=square(bar.outer,outerHalf),to=square(bar.inner,innerHalf);
+        ctx.strokeStyle=row===0?'#b1f4ce':'#85c9ee';ctx.lineWidth=Math.max(2,size*.009);ctx.lineCap='round';
+        ctx.beginPath();ctx.moveTo(...from);ctx.lineTo(...to);ctx.stroke();
+        ctx.fillStyle=ctx.strokeStyle;ctx.beginPath();ctx.arc(...from,3,0,TAU);ctx.fill();
+      }
+    }
+    ctx.fillStyle='#263239';ctx.fillRect(cx-innerHalf,cy-innerHalf,innerHalf*2,innerHalf*2);
+    ctx.strokeStyle='#64747b';ctx.lineWidth=1;ctx.strokeRect(cx-innerHalf,cy-innerHalf,innerHalf*2,innerHalf*2);
+    ctx.textAlign='center';ctx.fillStyle='#e9f0ee';ctx.font='13px system-ui';ctx.fillText('18 + 18',cx,cy-4);
+    ctx.fillStyle='#9caeaf';ctx.font='10px system-ui';ctx.fillText('順序固定 / 2 LAYERS',cx,cy+16);
+  }
+}
+
+// 5. UI adapter and playback clock ------------------------------------------
+const $ = id => document.getElementById(id);
+const UI = {
+  init() {
+    for(const [key,preset] of Object.entries(PRESETS)) {
+      const button=document.createElement('button'); button.textContent=preset.label; button.dataset.preset=key;
+      button.addEventListener('click',()=>Store.dispatch({type:'preset',value:key})); $('presets').append(button);
+    }
+    for(const spec of PARAMS) {
+      const control=document.createElement('div'); control.className='control';
+      control.innerHTML=`<label for="${spec.key}">${spec.label}<output id="${spec.key}Value" for="${spec.key}"></output></label><input id="${spec.key}" type="range" min="${spec.min}" max="${spec.max}" step="${spec.step}">`;
+      $('parameters').append(control);
+      $(spec.key).addEventListener('input',e=>Store.dispatch({type:'param',key:spec.key,value:Number(e.target.value)}));
+    }
+    for(const key of ['relation','direction']) $(key).addEventListener('change',e=>Store.dispatch({type:'param',key,value:e.target.value}));
+    $('play').addEventListener('click',()=>Store.dispatch({type:'play'}));
+    $('reset').addEventListener('click',()=>Store.dispatch({type:'reset'}));
+    $('variant').addEventListener('click',()=>Store.dispatch({type:'variant'}));
+    $('loop').addEventListener('change',e=>Store.dispatch({type:'loop',value:e.target.checked}));
+    $('timeline').addEventListener('input',e=>Store.dispatch({type:'seek',value:Number(e.target.value)}));
+  },
+  render(s, action={}) {
+    const end=Motion.duration(s.preset,s.params);
+    $('timeline').max=end; $('timeline').value=s.time;
+    $('clock').textContent=`${s.time.toFixed(2)} / ${end.toFixed(2)} s`;
+    $('duration').textContent=`${end.toFixed(2)} s`;
+    $('play').textContent=s.playing?'Ⅱ 停止':'▶ 再生'; $('play').setAttribute('aria-label',s.playing?'停止':'再生');
+    if(action.type==='tick') return;
+    $('sceneTitle').textContent=PRESETS[s.preset].title;
+    $('description').textContent=PRESETS[s.preset].description;
+    document.querySelectorAll('[data-preset]').forEach(el=>el.setAttribute('aria-pressed',String(el.dataset.preset===s.preset)));
+    for(const spec of PARAMS) {
+      $(spec.key).value=s.params[spec.key];
+      $(spec.key+'Value').textContent=(s.params[spec.key]*(spec.scale||1)).toFixed(spec.digits)+spec.unit;
+    }
+    $('relation').value=s.params.relation; $('direction').value=s.params.direction; $('loop').checked=s.loop;
+    $('status').textContent=s.variant ? `別案 ${s.variant} · 揺らぎシード ${s.seed}` : 'パラメータを動かして、動きを比較できます。';
+  }
+};
+const renderer=new Renderer($('stage'));
+const draw = () => { const s=Store.state; renderer.draw(Motion.frame(s.preset,s.params,s.time,s.seed)); };
+UI.init(); Store.subscribe((s,a)=>{UI.render(s,a);draw();}); UI.render(Store.state);
+new ResizeObserver(draw).observe($('stage'));
+let previousTime=null;
+function animate(now) {
+  // Ignore hidden-tab elapsed time; playback resumes from the visible position.
+  const dt=previousTime===null ? 0 : Math.min((now-previousTime)/1000,.1);
+  previousTime=now;
+  if(!document.hidden) Store.dispatch({type:'tick',dt});
+  requestAnimationFrame(animate);
+}
+document.addEventListener('visibilitychange',()=>{previousTime=null;});
+requestAnimationFrame(animate);
+</script>
+</body>
+</html>
