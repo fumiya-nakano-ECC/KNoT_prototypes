@@ -40,6 +40,7 @@ https://fumiya-nakano-ecc.github.io/KNoT_prototypes/takeoff/
 https://fumiya-nakano-ecc.github.io/KNoT_prototypes/expansion/
 
 ## gravity
+<img height="200"  alt="image" src="https://github.com/user-attachments/assets/3ceac2da-eaf0-43a4-85fd-389246bfe95f" />
 
 https://fumiya-nakano-ecc.github.io/KNoT_prototypes/gravity_constrained
 
