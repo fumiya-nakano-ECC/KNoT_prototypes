@@ -1,0 +1,35 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>KNoT / Takeoff</title>
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<main>
+<header><small>KNoT / MOTION STUDY 01</small><h1>Takeoff ─ 離陸</h1></header>
+<div class="toolbar">
+<button id="play" type="button">一時停止</button><button id="restart" type="button">最初から</button>
+<label>速度 <select id="speed"><option value="0.5">0.5×</option><option value="1" selected>1×</option><option value="1.5">1.5×</option></select></label>
+<label>表示 <select id="view"><option value="overlay">上下を重ねる</option><option value="split">上下を分ける</option></select></label>
+<label><input id="ids" type="checkbox"> ID</label>
+<label><input id="nodes" type="checkbox"> 端点</label>
+<label><input id="guides" type="checkbox"> ガイド</label>
+</div>
+<nav class="stages" aria-label="モーションの段階">
+<button data-stage="0"><small>01</small> 下辺へ集合</button>
+<button data-stage="1"><small>02</small> エンジン始動</button>
+<button data-stage="2"><small>03</small> 左右へ展開</button>
+<button data-stage="3"><small>04</small> 羽ばたき</button>
+</nav>
+<div class="motion-status"><span id="phaseText"></span><span id="time"></span></div>
+<div id="views" class="views">
+<section class="panel"><h2 id="topTitle">TOP + BOTTOM / 18 + 18</h2><svg id="top" viewBox="0 0 520 520" role="img" aria-label="離陸モーション"></svg></section>
+<section id="bottomPanel" class="panel"><h2>下層 / BOTTOM · 18 BARS</h2><svg id="bottom" viewBox="0 0 520 520" role="img" aria-label="下層の離陸モーション"></svg></section>
+</div>
+<details class="note"><summary>モーションとジオメトリ</summary><p>3秒で6時方向の下辺に集合。5秒かけて不揃いな傾きの振動を強め、4秒で左右にふわっと展開。その後は約6秒周期で羽ばたきを続けます。段階ボタンで各動作の冒頭へ移動できます。</p><p>skeltonの上下各18本、内外の正方形レールを継承。端点は周上を移動します。上下層には小さな位相差があります。</p><p>動きの印象を確認する模式図です。バーの長さは変化し、固定長などの実機の機構条件は未適用です。</p></details>
+</main>
+<script src="skeleton.js" defer></script>
+</body>
+</html>

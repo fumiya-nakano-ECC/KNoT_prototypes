@@ -1,0 +1,26 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>KNoT / Motion Model — Geometry</title>
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<main>
+<header><small>KNoT / MOTION MODEL</small><h1>ジオメトリ・スケルトン</h1></header>
+<div class="toolbar">
+<label>表示 <select id="view"><option value="overlay">上下を重ねる</option><option value="split">上下を分ける</option></select></label>
+<label><input id="ids" type="checkbox"> ID</label>
+<label><input id="nodes" type="checkbox"> 端点</label>
+<label><input id="guides" type="checkbox"> ガイド</label>
+</div>
+<div id="views" class="views">
+<section class="panel"><h2 id="topTitle">上層 / TOP · 18 BARS</h2><svg id="top" viewBox="0 0 520 520" role="img" aria-label="上層の正方形レールと18本のバー"></svg></section>
+<section id="bottomPanel" class="panel"><h2>下層 / BOTTOM · 18 BARS</h2><svg id="bottom" viewBox="0 0 520 520" role="img" aria-label="下層の正方形レールと18本のバー"></svg></section>
+</div>
+<details class="note"><summary>ジオメトリの仕様</summary><p>初期配置：各周上で等間隔。左上を起点として時計回りに01–18。</p><p>外周の一辺を1とした内周比率は約0.65（参照画像に合わせた比率）。上下は別の奥行き層として扱い、平面上の初期座標は共通です。</p><p>静止形状を確認するための模式図です。実寸・層間距離・固定長の機構条件は未設定です。</p></details>
+</main>
+<script src="skeleton.js" defer></script>
+</body>
+</html>
