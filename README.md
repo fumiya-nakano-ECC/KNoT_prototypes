@@ -25,4 +25,6 @@ https://fumiya-nakano-ecc.github.io/KNoT_prototypes/parallel_kinetic_bar_motion_
 
 https://fumiya-nakano-ecc.github.io/KNoT_prototypes/kinetic-bar-motion-lab.html
 
-## takeoff
+<img height="500" alt="image" src="https://github.com/user-attachments/assets/8cb40cff-9631-405f-9a31-412d560bbc78" />
+
+https://fumiya-nakano-ecc.github.io/KNoT_prototypes/kinetic-bar-flight-motion-lab.html
