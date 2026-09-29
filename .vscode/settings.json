@@ -1,0 +1,12 @@
+{
+    "chat.tools.terminal.autoApprove": {
+        "/^node -e \"const fs=require\\('fs'\\),vm=require\\('vm'\\); const src=fs\\.readFileSync\\('roman_dial/skeleton\\.js','utf8'\\)\\.split\\('function shuffled\\(\\)'\\)\\[0\\]; const ctx=\\{document:\\{getElementById\\(\\)\\{\\}\\},matchMedia:\\(\\)=>\\(\\{matches:false\\}\\)\\};vm\\.createContext\\(ctx\\);const lines=vm\\.runInContext\\(src\\+';dial\\(\\)',ctx\\);const outer=176,inner=\\.327\\*352;const on=\\(x,y,h\\)=>Math\\.abs\\(Math\\.max\\(Math\\.abs\\(x\\),Math\\.abs\\(y\\)\\)-h\\)<1e-7; if\\(lines\\.length!==36\\|\\|lines\\.some\\(\\(\\[x,y,u,v\\]\\)=>!on\\(x,y,outer\\)\\|\\|!on\\(u,v,inner\\)\\)\\)process\\.exit\\(1\\); console\\.log\\('Dial: 36 bars, all outer/inner endpoints on square rails'\\);\"$/": {
+            "approve": true,
+            "matchCommandLine": true
+        },
+        "/^node -e \"const fs=require\\('fs'\\),vm=require\\('vm'\\);const src=fs\\.readFileSync\\('roman_dial/skeleton\\.js','utf8'\\)\\.split\\('function element\\('\\)\\[0\\];const ctx=\\{document:\\{getElementById\\(\\)\\{\\}\\},matchMedia:\\(\\)=>\\(\\{matches:false\\}\\)\\};vm\\.createContext\\(ctx\\);vm\\.runInContext\\(src\\+';rebuild\\(\\);',ctx\\);let checked=0;for\\(const variation of \\['rune','weave','orbit'\\]\\)for\\(const scatter of \\[0,0\\.65,1\\]\\)for\\(const seed of \\[0,4\\]\\)\\{vm\\.runInContext\\('state\\.variation='\\+JSON\\.stringify\\(variation\\)\\+';state\\.scatter='\\+scatter\\+';state\\.seed='\\+seed\\+';rebuild\\(\\)',ctx\\);for\\(let t=0;t<=40;t\\+=\\.125\\)\\{const lines=vm\\.runInContext\\('frame\\('\\+t\\+'\\)',ctx\\);if\\(lines\\.length!==36\\|\\|lines\\.some\\(\\(\\[x,y,u,v\\]\\)=>Math\\.abs\\(Math\\.max\\(Math\\.abs\\(x\\),Math\\.abs\\(y\\)\\)-176\\)>1e-7\\|\\|Math\\.abs\\(Math\\.max\\(Math\\.abs\\(u\\),Math\\.abs\\(v\\)\\)-\\.327\\*352\\)>1e-7\\)\\)throw Error\\('invalid rail at '\\+t\\);checked\\+=lines\\.length\\}\\}console\\.log\\('Checked '\\+checked\\+' bars across timeline, variations, scatter and seeds'\\);\"$/": {
+            "approve": true,
+            "matchCommandLine": true
+        }
+    }
+}
