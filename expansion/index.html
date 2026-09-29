@@ -1,0 +1,35 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>KNoT / Expansion — Motion Variations</title>
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<main>
+<header><small>KNoT / MOTION STUDY 02</small><h1>Expansion ─ 拡張</h1></header>
+<p class="intro">重なりから、ジグザグやバッテンへ。小さな動きで開く。</p>
+<div class="toolbar">
+<label for="variant">バリエーション</label><select id="variant"><option value="zigzag">ジグザグ · 最小移動</option><option value="cross">バッテン · その場で開く</option><option value="original">従来 · すれ違い</option></select>
+</div>
+<p id="variantDescription" class="intro"></p>
+<div class="toolbar">
+<button id="play" type="button">一時停止</button><button id="restart" type="button">最初から</button>
+<label>速度 <select id="speed"><option value="0.5">0.5×</option><option value="1" selected>1×</option><option value="1.5">1.5×</option></select></label>
+<label>表示 <select id="view"><option value="overlay">上下を重ねる</option><option value="split">上下を分ける</option></select></label>
+<label><input id="ids" type="checkbox"> ID</label>
+<label><input id="nodes" type="checkbox"> 端点</label>
+<label><input id="guides" type="checkbox"> ガイド</label>
+</div>
+<div class="progress"><label for="expansion">展開量</label><input id="expansion" type="range" min="0" max="100" step="0.1" value="0"><output id="amount" for="expansion">0%</output></div>
+<div class="motion-status"><span id="phaseText">重なりを保つ</span><span>重なり → 拡張 → 余韻 → 収束</span></div>
+<div id="views" class="views">
+<section class="panel"><h2 id="topTitle">上層 / TOP · 18 BARS</h2><svg id="top" viewBox="0 0 520 520" role="img" aria-label="上層の正方形レールと18本のバー"></svg></section>
+<section id="bottomPanel" class="panel"><h2>下層 / BOTTOM · 18 BARS</h2><svg id="bottom" viewBox="0 0 520 520" role="img" aria-label="下層の正方形レールと18本のバー"></svg></section>
+</div>
+<details class="note"><summary>モーションとジオメトリ</summary><p>上下各18本、正方形の内外レールと初期の等間隔配置を継承。「上下」は奥行きの層です。移動量は各レール上の初期間隔を基準にしています。</p><p>ジグザグ：外端を固定し、内端を上下逆向きに半間隔ずつ移動。隣の内端との最初の接点で停止します。バッテン：同じ位置に重なっていた一組の外端を±1/4間隔、内端を∓1/4間隔動かします。交差する形は作りますが、隣の組とはすれ違いません。バッテンには非ゼロの最小角度がないため、見やすい小さな開き幅を採用しています。</p><p>1.2秒静止 → 3.6秒で拡張 → 1.8秒余韻 → 3.6秒で収束。展開量を操作すると停止します。バリエーション変更時は重なりへ戻り、再生・停止の状態は維持します。</p><p>従来のすれ違う動きも比較用に選択できます。バーの長さは変化する模式図です。</p><p>参考：<a href="https://kinaesthetic.design/#volume" target="_blank" rel="noreferrer">Designing Objects in Motion / Volume</a></p></details>
+</main>
+<script src="skeleton.js" defer></script>
+</body>
+</html>
