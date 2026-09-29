@@ -35,9 +35,13 @@ https://fumiya-nakano-ecc.github.io/KNoT_prototypes/kinetic-bar-flight-motion-la
 https://fumiya-nakano-ecc.github.io/KNoT_prototypes/takeoff/
 
 ## Expansion
+<img height="200" alt="image" src="https://github.com/user-attachments/assets/21976891-9dd2-4d36-b52a-d6468332030d" />
 
+https://fumiya-nakano-ecc.github.io/KNoT_prototypes/expansion/
 
-## 
+## gravity
 
 ### (A little less gravity.)
+<img height="100" alt="image" src="https://github.com/user-attachments/assets/eb2bcc42-baa2-431c-a563-ebb17dbdd0ac" />
+https://fumiya-nakano-ecc.github.io/KNoT_prototypes/allg_gravity_unconstrained/
 
