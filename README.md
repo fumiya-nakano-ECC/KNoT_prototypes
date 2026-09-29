@@ -41,7 +41,9 @@ https://fumiya-nakano-ecc.github.io/KNoT_prototypes/expansion/
 
 ## gravity
 
-### (A little less gravity.)
+https://fumiya-nakano-ecc.github.io/KNoT_prototypes/gravity_constrained
+
 <img height="100" alt="image" src="https://github.com/user-attachments/assets/eb2bcc42-baa2-431c-a563-ebb17dbdd0ac" />
+
 https://fumiya-nakano-ecc.github.io/KNoT_prototypes/allg_gravity_unconstrained/
 

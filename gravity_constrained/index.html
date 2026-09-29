@@ -1,0 +1,42 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>KNoT / Gravity — レールの中の重力</title>
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<main>
+<header><small>KNoT / MOTION STUDY</small><h1>Gravity ─ レールの中の重力</h1></header>
+<div class="toolbar">
+<button id="play" type="button">一時停止</button><button id="restart" type="button">最初から</button>
+<label>速度 <select id="speed"><option value="0.5">0.5×</option><option value="1" selected>1×</option><option value="1.5">1.5×</option></select></label>
+<label>表示 <select id="view"><option value="overlay">上下を重ねる</option><option value="split">上下を分ける</option></select></label>
+<label><input id="ids" type="checkbox"> ID</label>
+<label><input id="nodes" type="checkbox"> 端点</label>
+<label><input id="guides" type="checkbox"> ガイド</label>
+</div>
+<nav class="stages" aria-label="モーションの段階">
+<button type="button" data-stage="0">01 <span>沈み込む</span></button>
+<button type="button" data-stage="1">02 <span>浮き上がる</span></button>
+<button type="button" data-stage="2">03 <span>漂う</span></button>
+<button type="button" data-stage="3">04 <span>落下と余韻</span></button>
+</nav>
+<details class="parameters" open>
+<summary>シーケンスの調整</summary>
+<p>変更はすぐに反映されます。各段階のボタンで、その動きの先頭へ移動できます。</p>
+<div id="parameterControls" class="parameter-grid"></div>
+<div class="parameter-footer"><span>時間は実際の再生速度が1×の場合。強さ・揺れは相対値です。</span><button id="resetParameters" type="button">すべて初期値に戻す</button></div>
+</details>
+<div class="motion-status"><span id="phaseText"></span><output id="time"></output></div>
+<label class="timeline">時間 <input id="seek" type="range" min="0" max="24" step="0.01" value="0" aria-label="モーションの再生位置"></label>
+<div id="views" class="views">
+<section class="panel"><h2 id="topTitle">上層 / TOP · 18 BARS</h2><svg id="top" viewBox="0 0 520 520" role="img" aria-label="上層の正方形レールと18本のバー"></svg></section>
+<section id="bottomPanel" class="panel"><h2>下層 / BOTTOM · 18 BARS</h2><svg id="bottom" viewBox="0 0 520 520" role="img" aria-label="下層の正方形レールと18本のバー"></svg></section>
+</div>
+<details class="note"><summary>モーションと構造の制約</summary><p>初期設定は24秒のループ。各段階の時間を変更すると全体の長さも変わります。下辺に重さを集め、ゆっくり解放して上辺へ浮上。小さな揺らぎの後、加速して沈み、短い反動から元の配置へ戻ります。</p><p>skeltonの上下各18本、内外の正方形レール、内周比率0.654、同じID同士の接続を維持。端点は各レール上だけを移動し、同一レール・同一層内での順序を保ちます。上下層と内外端点のわずかな遅れで、重さと浮遊の余韻を表現します。</p><p>重力の印象をつくるモーションスタディです。バー長は変化します。元のskeltonと同様、固定長・実寸・層間距離・部材の衝突は機構条件に含めていません。</p><p>参考：<a href="https://kinaesthetic.design/ja#gravity_jp" target="_blank" rel="noopener noreferrer">ウゴキのデザインリサーチ / ジュウリョク</a></p></details>
+</main>
+<script src="skeleton.js" defer></script>
+</body>
+</html>

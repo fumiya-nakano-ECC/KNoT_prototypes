@@ -3,12 +3,14 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>KNoT / Motion Model — Geometry</title>
+<title>KNoT / Motion Studio</title>
 <link rel="stylesheet" href="style.css">
 </head>
 <body>
 <main>
-<header><small>KNoT / MOTION MODEL</small><h1>ジオメトリ・スケルトン</h1></header>
+<header><small>KNoT / MOTION MODEL</small><h1>Motion Studio</h1><span class="status">構成・設定のスケルトン</span></header>
+<div class="workspace">
+<section class="preview" aria-label="形状プレビュー">
 <div class="toolbar">
 <label>表示 <select id="view"><option value="overlay">上下を重ねる</option><option value="split">上下を分ける</option></select></label>
 <label><input id="ids" type="checkbox"> ID</label>
@@ -18,6 +20,20 @@
 <div id="views" class="views">
 <section class="panel"><h2 id="topTitle">上層 / TOP · 18 BARS</h2><svg id="top" viewBox="0 0 520 520" role="img" aria-label="上層の正方形レールと18本のバー"></svg></section>
 <section id="bottomPanel" class="panel"><h2>下層 / BOTTOM · 18 BARS</h2><svg id="bottom" viewBox="0 0 520 520" role="img" aria-label="下層の正方形レールと18本のバー"></svg></section>
+</div>
+<div class="preview-foot"><span>STATIC PREVIEW</span><span>上下各18本 / 初期形状</span></div>
+<div class="sequence-heading"><h2>シーケンス</h2><span id="totalDuration"></span></div>
+<div id="sequence" class="sequence" role="group" aria-label="編集するシーケンス区間"></div>
+<p class="hint">区間を選択して、右側で動きの候補と設定値を編集します。</p>
+<div class="playback"><button type="button" disabled>再生</button><span>モーション接続後に再生できます</span></div>
+</section>
+<aside class="settings" aria-label="モーション設定">
+<div class="settings-heading"><div><small id="stageIndex"></small><h2 id="stageName"></h2></div><button id="resetStage" type="button" class="quiet">この区間をリセット</button></div>
+<p id="stageDescription" class="hint"></p>
+<section class="setting-section"><h3>バリエーション <span>仮設定</span></h3><label class="sr-only" for="variation">動きのバリエーション</label><select id="variation"></select><p id="variationDescription" class="hint"></p></section>
+<div id="parameters"></div>
+<p class="hint connection-note">設定値の編集・保持までのスケルトンです。バーへの動きの反映は次の段階で追加します。</p>
+</aside>
 </div>
 <details class="note"><summary>ジオメトリの仕様</summary><p>初期配置：各周上で等間隔。左上を起点として時計回りに01–18。</p><p>外周の一辺を1とした内周比率は約0.65（参照画像に合わせた比率）。上下は別の奥行き層として扱い、平面上の初期座標は共通です。</p><p>静止形状を確認するための模式図です。実寸・層間距離・固定長の機構条件は未設定です。</p></details>
 </main>
