@@ -48,3 +48,7 @@ https://fumiya-nakano-ecc.github.io/KNoT_prototypes/gravity_constrained
 
 https://fumiya-nakano-ecc.github.io/KNoT_prototypes/allg_gravity_unconstrained/
 
+## roman_dial
+<img height="200" alt="image" src="https://github.com/user-attachments/assets/88e1721c-79dd-4a5f-a49c-471ae71631dc" />
+
+https://fumiya-nakano-ecc.github.io/KNoT_prototypes/roman_dial
