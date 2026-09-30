@@ -1,0 +1,15 @@
+.intro{font-size:14px;line-height:2.2;margin:20px 0 30px;color:#717777}
+.settings h2{font-size:23px;margin-top:12px;font-weight:400}
+.playback input[type=range]{flex:1;min-width:40px}
+.playback button{white-space:nowrap}
+.playback{flex-wrap:wrap}
+.bar{stroke:#494949;stroke-width:6;stroke-linecap:butt}
+[data-layer=bottom] .bar{stroke:#8a9da0}
+.swatch{display:inline-block;width:18px;height:4px;margin-right:8px;vertical-align:middle}
+.top-swatch{background:#494949}.bottom-swatch{background:#8a9da0}
+.source-link{display:inline-block;margin-top:26px;color:#697779;font-size:11px;text-underline-offset:4px}
+.source-link:focus-visible{outline:2px solid #777;outline-offset:4px}
+.sequence button[aria-pressed=true]{border-color:#718789;background:#f1f5f4}
+#time,output{font-variant-numeric:tabular-nums}
+@media(max-width:480px){.playback{gap:8px}.playback button{padding:7px 9px}.sequence button{font-size:11px}.sequence button span{font-size:9px}}
+.sequence button{flex:1}
