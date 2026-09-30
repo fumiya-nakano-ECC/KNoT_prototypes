@@ -52,3 +52,8 @@ https://fumiya-nakano-ecc.github.io/KNoT_prototypes/allg_gravity_unconstrained/
 <img height="200" alt="image" src="https://github.com/user-attachments/assets/88e1721c-79dd-4a5f-a49c-471ae71631dc" />
 
 https://fumiya-nakano-ecc.github.io/KNoT_prototypes/roman_dial
+
+## breathing_weave
+<img height="200" alt="呼吸する織り目のプレビュー" src="breathing_weave/preview.png" />
+
+https://fumiya-nakano-ecc.github.io/KNoT_prototypes/breathing_weave/
