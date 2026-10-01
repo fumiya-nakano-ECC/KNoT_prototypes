@@ -9,6 +9,11 @@
 https://fumiya-nakano-ecc.github.io/KNoT_prototypes/skelton
 
 ---
+## shin
+
+https://fumiya-nakano-ecc.github.io/KNoT_prototypes/shin/KNoT-study_shin_v91
+
+---
 
 ## ML
 <img height="200" alt="image" src="https://github.com/user-attachments/assets/68ffcb99-6232-423b-b908-7bce825cbe22" />
